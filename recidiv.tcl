@@ -85,6 +85,12 @@ proc write_html {file body} {
     close $fd
 }
 
+# Render commands output to HTML.
+proc output-to-html o {
+    set e [e $o]
+    regsub -all "\n(@\[^\n\]+)\n" $o "\n</pre><h3>\\1</h3><pre>\n"
+}
+
 # Create the detail page, the one of a specific test run.
 proc update_detail_page item {
     set content {}
@@ -94,9 +100,9 @@ proc update_detail_page item {
     append content "<h3>$branch ($tag)</h3>\n"
     append content "<h4>[clock format $time]</h4>\n"
     if {$status eq {ok}} {
-        append content "<pre class=\"okpre\">[e $fulloutput]</pre>\n"
+        append content "<pre class=\"okpre\">[output-to-html $fulloutput]</pre>\n"
     } else {
-        append content "<h2>@[lindex $err 0]</h2><pre class=\"okpre\">[e $fulloutput]</pre>\n<pre class=\"errpre\">[e [lindex $err 1]]</pre>\n"
+        append content "<div class=\"errorcmd\">Error in: [lindex $err 0]</div>\n<pre class=\"okpre\">[output-to-html $fulloutput]</pre>\n<pre class=\"errpre\">[output-to-html [lindex $err 1]]</pre>\n"
     }
     append content "</div>"
     write_html [file join $::webroot run_$id.html] $content
@@ -157,9 +163,9 @@ while 1 {
         foreach cmd $commands {
             if {[lindex $cmd 0] eq {cd}} {
                 cd [lindex $cmd 1]
-                append fulloutput "++ Working dir is now '[lindex $cmd 1]'\n\n"
+                append fulloutput "\n@Working dir is now '[lindex $cmd 1]'\n"
             } else {
-                append fulloutput "\n@$cmd\n\n" [ci_exec_command $cmd]
+                append fulloutput "\n@$cmd\n" [ci_exec_command $cmd]
             }
         }
 
