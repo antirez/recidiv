@@ -164,9 +164,9 @@ proc print_history_info {} {
 ################################################################################
 # Email notifications
 ################################################################################
-proc send_email_message {recipient email_server subject body} {
+proc send_email_message {from recipient email_server subject body} {
     set token [mime::initialize -canonical text/plain -string $body]
-    mime::setheader $token Subject $subject
+    mime::setheader $token From $from Subject $subject
     smtp::sendmessage $token \
           -recipients $recipient -servers $email_server
     mime::finalize $token
@@ -179,7 +179,7 @@ proc handle_notifications name {
     set prev [lindex $h end-1]
     foreach {status id time name tag err output} $curr break
     if {$status eq {err}} {
-        if {$::notify.every.failure || $prev eq {} ||
+        if {[set ::notify.every.failure] || $prev eq {} ||
                                        [lindex $prev 0] ne {err}} {
             set notify 1
         }
@@ -192,9 +192,13 @@ proc handle_notifications name {
     # Send email notifications
     if {$notify} {
         foreach to [set ::notify.to] {
-            set subject "[recidiv notification] Test '$name' new state is: $status"
+            set subject "\[recidiv notification\] Test '$name' new state is: $status"
             set body "Details below:\n$output\n$err"
-            send_email_message $to [set ::smtp.server] $subject $body
+            if {[catch {
+                send_email_message [set ::notify.from] $to [set ::smtp.server] $subject $body
+            } e]} {
+                puts "Warning: problems sending email: $e"
+            }
         }
     }
 }
