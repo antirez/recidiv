@@ -178,7 +178,7 @@ while 1 {
             puts "!!! Error for '$name'"
             lappend ::history_$name [list err $::test_id [clock seconds] $name $tag $::err $fulloutput]
         } else {
-            puts "Test successful for '$b'"
+            puts "Test successful for 'name'"
             lappend ::history_$name [list ok $::test_id [clock seconds] $name $tag {} $fulloutput]
         }
         puts {}
