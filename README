@@ -1,0 +1,12 @@
+Recidiv is a minimal Continuous Integration framework.
+I use it in order to run the Redis CI.
+
+In order to setup your CI edit the ci.conf file, finally run
+the Tcl script just with:
+
+    ./recidiv.tcl
+
+Editing the config file should be easy.
+
+This is a work in progress and while general is primarily targeted at
+Redis needs, but your contributions are welcomed.
