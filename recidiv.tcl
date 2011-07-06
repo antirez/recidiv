@@ -167,7 +167,7 @@ while 1 {
         # we are testing in order to provide more information.
         catch {
             if {[file exists .git]} {
-                set gitlog [exec -ignorestderr git log --oneline $branch 2>@1]
+                set gitlog [exec -ignorestderr git log --oneline 2>@1]
                 set tag [lindex [split $gitlog] 0]
             }
         }
