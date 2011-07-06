@@ -1,15 +1,23 @@
 #!/usr/bin/env tclsh8.5
 
 package require html
+package require smtp
+package require mime
 
 ################################################################################
 # Configuration
 ################################################################################
 
+set ::configfile ci.conf
+if {[llength $argv]} {
+    set ::configfile [lindex $argv 0]
+}
+
 # Create the procedures to set the configuration parameters.
 foreach directive {
     notify.from notify.to history.len datafile
-    webroot whitelist template
+    webroot whitelist template notify.every.failure smtp.server
+    wait.after.every.test
 } {
     proc $directive val "set ::$directive \$val"
 }
@@ -23,7 +31,7 @@ proc test {name steps} {
 # Running the tests.
 ################################################################################
 
-source ci.conf
+source $::configfile
 set ::test_id 0
 
 proc ci_error {stage msg} {
@@ -146,6 +154,44 @@ proc print_history_info {} {
 }
 
 ################################################################################
+# Email notifications
+################################################################################
+proc send_email_message {recipient email_server subject body} {
+    set token [mime::initialize -canonical text/plain -string $body]
+    mime::setheader $token Subject $subject
+    smtp::sendmessage $token \
+          -recipients $recipient -servers $email_server
+    mime::finalize $token
+}
+
+proc handle_notifications name {
+    set notify 0
+    set h [set ::history_$name]
+    set curr [lindex $h end]
+    set prev [lindex $h end-1]
+    foreach {status id time name tag err output} $curr break
+    if {$status eq {err}} {
+        if {$::notify.every.failure || $prev eq {} ||
+                                       [lindex $prev 0] ne {err}} {
+            set notify 1
+        }
+    } else {
+        if {$prev ne {} && [lindex $prev 0] eq {err}} {
+            set notify 1
+        }
+    }
+
+    # Send email notifications
+    if {$notify} {
+        foreach to [set ::notify.to] {
+            set subject "[recidiv notification] Test '$name' new state is: $status"
+            set body "Details below:\n$output\n$err"
+            send_email_message $to [set ::smtp.server] $subject $body
+        }
+    }
+}
+
+################################################################################
 # Main!
 ################################################################################
 
@@ -187,8 +233,10 @@ while 1 {
             puts "Test successful for 'name'"
             lappend ::history_$name [list ok $::test_id [clock seconds] $name $tag {} $fulloutput]
         }
+        handle_notifications $name
         puts {}
         save_data
         update_site
+        after [expr {[set ::wait.after.every.test]*1000}]
     }
 }
