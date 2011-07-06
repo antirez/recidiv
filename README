@@ -1,6 +1,10 @@
 Recidiv is a minimal Continuous Integration framework.
 I use it in order to run the Redis CI.
 
+To install tclsh8.5 and its libs on ubuntu 10.04, use following commands:
+sudo apt-get install tcl8.5
+sudo apt-get install tcllib
+
 In order to setup your CI edit the ci.conf file, finally run
 the Tcl script just with:
 
