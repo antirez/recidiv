@@ -14,12 +14,20 @@ if {[llength $argv]} {
 }
 
 # Create the procedures to set the configuration parameters.
-foreach directive {
-    notify.from notify.to history.len datafile
-    webroot whitelist template notify.every.failure smtp.server
-    wait.after.every.test
+foreach {directive defval} {
+    notify.from ci@test.org
+    notify.to {}
+    history.len 1024
+    datafile /tmp/recidiv.data
+    webroot /tmp/
+    whitelist {}
+    template {<html><body>%content</body></html>}
+    notify.every.failure 0
+    smtp.server 127.0.0.1
+    wait.after.every.test 0
 } {
     proc $directive val "set ::$directive \$val"
+    set $directive $defval
 }
 
 # The 'test' procedure is used in order to setup a new CI test.
