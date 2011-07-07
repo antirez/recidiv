@@ -8,9 +8,11 @@ package require mime
 # Configuration
 ################################################################################
 
-set ::configfile ci.conf
 if {[llength $argv]} {
     set ::configfile [lindex $argv 0]
+} else {
+    puts stderr "Usage: recidiv <config-file>"
+    exit 1
 }
 
 # Create the procedures to set the configuration parameters.
