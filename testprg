@@ -5,4 +5,10 @@
 # 
 # It is used as a program to run in the example.conf configuration.
 
-if {rand() < 0.1} {exit 1} else {exit 0}
+if {rand() < 0.1} {
+    puts "Hello, I'm the example program exiting with an error"
+    exit 1
+} else {
+    puts "Hello, I'm the example program exiting with a success code"
+    exit 0
+}
