@@ -168,7 +168,7 @@ proc send_email_message {from recipient email_server subject body} {
     set token [mime::initialize -canonical text/plain -string $body]
     mime::setheader $token From $from Subject $subject
     smtp::sendmessage $token \
-          -recipients $recipient -servers $email_server
+          -originator $from -recipients $recipient -servers $email_server
     mime::finalize $token
 }
 
@@ -192,6 +192,7 @@ proc handle_notifications name {
     # Send email notifications
     if {$notify} {
         foreach to [set ::notify.to] {
+            puts "\[\\/\] send notification to $to"
             set subject "\[recidiv notification\] Test '$name' new state is: $status"
             set body "Details below:\n$output\n$err"
             if {[catch {
