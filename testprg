@@ -1,0 +1,8 @@
+#!/usr/bin/env tclsh8.5
+
+# This is just a test program that is designed in order to fail
+# with 10% of probabilities (exiting with 1).
+# 
+# It is used as a program to run in the example.conf configuration.
+
+if {rand() < 0.1} {exit 1} else {exit 0}
