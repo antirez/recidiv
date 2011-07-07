@@ -1,5 +1,5 @@
 TODO:
-  x Email report
   x implement whitelist
   x limit max length of history, removing html files when removing old entries
   x support for colorization of strings matching something in the output
+  x IRC notifications? I already have code for that and is fun.
