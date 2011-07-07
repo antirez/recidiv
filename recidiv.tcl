@@ -50,10 +50,14 @@ proc ci_error {stage msg} {
 }
 
 proc ci_exec_command cmd {
-    if {$::err ne {}} return {}
     puts "++ $cmd"
     if {[catch {
-        set output [exec -ignorestderr {*}$cmd 2>@1]
+        if {[lindex $cmd 0] eq {cd}} {
+            cd [lindex $cmd 1]
+            set output "Working dir is now '[lindex $cmd 1]'\n"
+        } else {
+            set output [exec -ignorestderr {*}$cmd 2>@1]
+        }
     } e]} {
         ci_error $cmd $e
         set output {}
@@ -223,12 +227,8 @@ while 1 {
         set fulloutput {}
         puts "======== Testing '$name'"
         foreach cmd $commands {
-            if {[lindex $cmd 0] eq {cd}} {
-                cd [lindex $cmd 1]
-                append fulloutput "\n@Working dir is now '[lindex $cmd 1]'\n"
-            } else {
-                append fulloutput "\n@$cmd\n" [ci_exec_command $cmd]
-            }
+            append fulloutput "\n@$cmd\n" [ci_exec_command $cmd]
+            if {$::err ne {}} break
         }
 
         # If it is a git repository we try to extract the SHA of the version
