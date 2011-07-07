@@ -129,7 +129,6 @@ proc update_detail_page item {
 # Create the index.html file in the web site, and triggers the generation
 # of all the details pages.
 proc update_site {} {
-    puts "Updating web site..."
     set content {}
     foreach {name commands} $::tests {
         if {[info exists ::history_$name]} {
@@ -251,9 +250,11 @@ while 1 {
             lappend ::history_$name [list ok $::test_id [clock seconds] $name $tag {} $fulloutput]
         }
         handle_notifications $name
-        puts {}
         save_data
+        puts -nonewline "Updating web site... "
+        flush stdout
         update_site
+        puts "done\n"
         after [expr {[set ::wait.after.every.test]*1000}]
     }
 }
