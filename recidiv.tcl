@@ -166,7 +166,9 @@ proc print_history_info {} {
 ################################################################################
 proc send_email_message {from recipient email_server subject body} {
     set token [mime::initialize -canonical text/plain -string $body]
-    mime::setheader $token From $from Subject $subject
+    mime::setheader $token From $from
+    mime::setheader $token To $recipient
+    mime::setheader $token Subject $subject
     smtp::sendmessage $token \
           -originator $from -recipients $recipient -servers $email_server
     mime::finalize $token
@@ -194,7 +196,7 @@ proc handle_notifications name {
         foreach to [set ::notify.to] {
             puts "\[\\/\] send notification to $to"
             set subject "\[recidiv notification\] Test '$name' new state is: $status"
-            set body "Details below:\n$output\n$err"
+            set body "Details below:\n$output\nIn [lindex $err 0]:\n\n[lindex $err 1]"
             if {[catch {
                 send_email_message [set ::notify.from] $to [set ::smtp.server] $subject $body
             } e]} {
