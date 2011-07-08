@@ -27,6 +27,8 @@ foreach {directive defval} {
     notify.every.failure 0
     smtp.server 127.0.0.1
     wait.after.every.test 0
+    web.index.show.latest 15
+    web.index.show.latest.err 5
 } {
     proc $directive val "set ::$directive \$val"
     set $directive $defval
@@ -117,6 +119,7 @@ proc output-to-html o {
 proc update_detail_page item {
     set content {}
     foreach {status id time branch tag err fulloutput} $item break
+    if {[file exists [file join $::webroot run_$id.html]]} return
     append content "<div class=\"rundetails\">"
     append content "<h2>Details for run #$id (<span class=\"status_$status\">$status</span>)</h2>\n"
     append content "<h3>$branch ($tag)</h3>\n"
@@ -130,6 +133,28 @@ proc update_detail_page item {
     write_html [file join $::webroot run_$id.html] $content
 }
 
+proc latest_runs_to_html {name count status_pattern} {
+    set h [set ::history_$name]
+    set c 0
+    set content {}
+
+    for {set j 0} {$j < [llength $h]} {incr j} {
+        if {$c == $count} break
+        set item [lindex $h end-$j]
+        if {$item eq {}} break
+        foreach {status id time name tag} $item break
+        if {[string match -nocase $status_pattern $status]} {
+            append content "<li><a href=\"run_$id.html\">#$id</a> \[<span class=\"status_$status\">$status</span>\] $name ($tag) -- [clock format $time]</li>\n"
+            update_detail_page $item
+            incr c
+        }
+    }
+    if {$c == 0} {
+        append content "No items."
+    }
+    return $content
+}
+
 # Create the index.html file in the web site, and triggers the generation
 # of all the details pages.
 proc update_site {} {
@@ -137,14 +162,14 @@ proc update_site {} {
     foreach {name commands} $::tests {
         if {[info exists ::history_$name]} {
             append content "<h2>$name</h2>\n<ul>\n"
-            for {set j 0} {$j < 10} {incr j} {
-                set item [lindex [set ::history_$name] end-$j]
-                if {$item eq {}} break
-                foreach {status id time name tag} $item break
-                append content "<li><a href=\"run_$id.html\">#$id</a> \[<span class=\"status_$status\">$status</span>\] $name ($tag) -- [clock format $time]</li>\n"
-                update_detail_page $item
-            }
+            append content [latest_runs_to_html $name [set ::web.index.show.latest] *]
             append content "</ul>\n"
+            set latesterr [latest_runs_to_html $name [set ::web.index.show.latest.err] err]
+            if {$latesterr ne {}} {
+                append content "<h3>latest errors</h3>\n<ul>\n"
+                append content $latesterr
+                append content "</ul>\n"
+            }
         }
     }
     write_html [file join $::webroot index.html] $content
