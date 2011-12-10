@@ -114,6 +114,12 @@ proc last_execution_time name {
     return $time
 }
 
+proc history_add {name status id time tag err output} {
+    lappend ::history_$name [list $status $id $time $name $tag $err $output]
+    set ::history_$name [lrange [set ::history_$name] \
+        end-[expr {[set ::history.len]-1}] end]
+}
+
 ################################################################################
 # HTML generation
 ################################################################################
@@ -301,10 +307,10 @@ while 1 {
         incr ::test_id
         if {$::err ne {}} {
             puts "!!! Error for '$name'"
-            lappend ::history_$name [list err $::test_id [clock seconds] $name $tag $::err $fulloutput]
+            history_add $name err $::test_id [clock seconds] $tag $::err $fulloutput
         } else {
             puts "Test successful for 'name'"
-            lappend ::history_$name [list ok $::test_id [clock seconds] $name $tag {} $fulloutput]
+            history_add $name ok $::test_id [clock seconds] $tag {} $fulloutput
         }
         handle_notifications $name
         save_data
