@@ -5,12 +5,9 @@ To install tclsh8.5 and its libs on ubuntu 10.04, use following commands:
 sudo apt-get install tcl8.5
 sudo apt-get install tcllib
 
-In order to setup your CI edit the ci.conf file, finally run
+In order to setup your CI edit the example.conf file, finally run
 the Tcl script just with:
 
-    ./recidiv.tcl
+    ./recidiv.tcl example.conf
 
-Editing the config file should be easy.
-
-This is a work in progress and while general is primarily targeted at
-Redis needs, but your contributions are welcomed.
+Recidiv was designed to power the Redis CI environment at http://ci.redis.io

@@ -35,8 +35,13 @@ foreach {directive defval} {
 }
 
 # The 'test' procedure is used in order to setup a new CI test.
-proc test {name steps} {
-    lappend ::tests $name $steps
+proc test {name steps {options ""}} {
+    set options_dict {}
+    foreach option [split $options "\r\n"] {
+        if {[llength $option] == 0} continue
+        dict set options_dict [lindex $option 0] [lrange $option 1 end]
+    }
+    lappend ::tests [list $name $steps $options_dict]
 }
 
 ################################################################################
@@ -73,7 +78,8 @@ proc ci_exec_command cmd {
 
 proc save_data {} {
     set data {}
-    foreach {name commands} $::tests {
+    foreach test $::tests {
+        lassign $test name commands options
         if {[info exists ::history_$name]} {
             lappend data ::history_$name [set ::history_$name]
         }
@@ -92,6 +98,20 @@ proc load_data {} {
     foreach {var val} $data {
         set $var $val
     }
+}
+
+################################################################################
+# History
+################################################################################
+
+# Returns the UNIX time of the last exection of the specified test, or
+# 0 if the test was never executed before.
+proc last_execution_time name {
+    if {![info exists ::history_$name]} {return 0}
+    set h [set ::history_$name]
+    set last [lindex $h end]
+    lassign $last status id time name tag err output
+    return $time
 }
 
 ################################################################################
@@ -159,7 +179,8 @@ proc latest_runs_to_html {name count status_pattern} {
 # of all the details pages.
 proc update_site {} {
     set content {}
-    foreach {name commands} $::tests {
+    foreach test $::tests {
+        lassign $test name commands options
         if {[info exists ::history_$name]} {
             append content "<h2>$name</h2>\n<ul>\n"
             append content [latest_runs_to_html $name [set ::web.index.show.latest] *]
@@ -178,7 +199,8 @@ proc update_site {} {
 # Print some history information when the CI is executed.
 # Just as a way to say "Welcome, you are running the right thing".
 proc print_history_info {} {
-    foreach {name commands} $::tests {
+    foreach test $::tests {
+        lassign $test name commands options
         if {[info exists ::history_$name]} {
             puts "$name:"
             flush stdout
@@ -246,10 +268,20 @@ load_data
 update_site
 print_history_info
 while 1 {
-    foreach {name commands} $::tests {
+    foreach test $::tests {
+        lassign $test name commands options
         set ::err {}
         set tag {???}
         set fulloutput {}
+
+        # Handle the 'run.minimal.period <seconds>' option, not executing the
+        # test if it was already executed less than <seconds> seconds ago.
+        if {[dict exists $options run.minimal.period]} {
+            set minperiod [lindex [dict get $options run.minimal.period] 0]
+            set lastexec [last_execution_time $name]
+            if {[clock seconds]-$lastexec < $minperiod} continue
+        }
+
         puts "======== Testing '$name'"
         foreach cmd $commands {
             append fulloutput "\n@$cmd\n" [ci_exec_command $cmd]
