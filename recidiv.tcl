@@ -253,7 +253,7 @@ proc handle_notifications name {
     if {$notify} {
         foreach to [set ::notify.to] {
             puts "\[\\/\] send notification to $to"
-            set subject "\[recidiv notification\] Test '$name' new state is: $status"
+            set subject "\[recidiv run $id\] $name [string toupper $status]"
             set body "Details below:\n$output\nIn [lindex $err 0]:\n\n[lindex $err 1]"
             if {[catch {
                 send_email_message [set ::notify.from] $to [set ::smtp.server] $subject $body
