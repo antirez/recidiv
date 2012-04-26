@@ -210,7 +210,7 @@ proc print_history_info {} {
         if {[info exists ::history_$name]} {
             puts "$name:"
             flush stdout
-            foreach item [set ::history_$name] {
+            foreach item [lrange [set ::history_$name] end-4 end] {
                 foreach {status id time branch tag} $item break
                 puts "#$id \[$status\] $branch ($tag) -- [clock format $time]"
             }
