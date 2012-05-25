@@ -58,6 +58,11 @@ proc ci_error {stage msg} {
 
 proc ci_exec_command cmd {
     puts "++ $cmd"
+    set ignore_error 0
+    if {[string index $cmd 0] eq {!}} {
+        set cmd [string range $cmd 0 end-1]
+        set ignore_error 1
+    }
     if {[catch {
         if {[lindex $cmd 0] eq {cd}} {
             cd [lindex $cmd 1]
@@ -66,8 +71,12 @@ proc ci_exec_command cmd {
             set output [exec -ignorestderr {*}$cmd 2>@1]
         }
     } e]} {
-        ci_error $cmd $e
-        set output {}
+        if {$ignore_error} {
+            set output $e
+        } else {
+            ci_error $cmd $e
+            set output {}
+        }
     }
     return $output
 }
