@@ -60,7 +60,7 @@ proc ci_exec_command cmd {
     puts "++ $cmd"
     set ignore_error 0
     if {[string index $cmd 0] eq {!}} {
-        set cmd [string range $cmd 0 end-1]
+        set cmd [string range $cmd 1 end-1]
         set ignore_error 1
     }
     if {[catch {
