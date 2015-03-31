@@ -194,6 +194,19 @@ proc latest_runs_to_html {name count status_pattern} {
 # of all the details pages.
 proc update_site {} {
     set content {}
+
+    append content {<div id="badges">}
+    foreach test $::tests {
+        lassign $test name commands options
+        if {[info exists ::history_$name]} {
+            set h [set ::history_$name]
+            set item [lindex $h end]
+            foreach {status id time name tag} $item break
+            append content "<div class=\"status_$status badge\">$name</div>"
+        }
+    }
+    append content {</div>}
+
     foreach test $::tests {
         lassign $test name commands options
         if {[info exists ::history_$name]} {
