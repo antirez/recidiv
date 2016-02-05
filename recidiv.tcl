@@ -29,6 +29,7 @@ foreach {directive defval} {
     wait.after.every.test 0
     web.index.show.latest 15
     web.index.show.latest.err 5
+    run.after {}
 } {
     proc $directive val "set ::$directive \$val"
     set $directive $defval
@@ -286,6 +287,22 @@ proc handle_notifications name {
     }
 }
 
+# Run the after script if configured
+proc run_after_script {name err} {
+    if {${::run.after} eq {}} return
+    if {$err eq {}} {
+        set testres ok
+        set ::env(RECIDIV_ERROR) {}
+    } else {
+        set testres err
+        set ::env(RECIDIV_ERROR) $err
+    }
+    set script [string map [list %testname $name %testres $testres] ${::run.after}]
+    set script [string trim $script]
+    puts "Executing $script"
+    catch {exec {*}$script}
+}
+
 ################################################################################
 # Main!
 ################################################################################
@@ -335,6 +352,7 @@ while 1 {
             history_add $name ok $::test_id [clock seconds] $tag {} $fulloutput
         }
         handle_notifications $name
+        run_after_script $name $err
         save_data
         puts -nonewline "Updating web site... "
         flush stdout
