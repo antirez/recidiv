@@ -300,7 +300,9 @@ proc run_after_script {name err} {
     set script [string map [list %testname $name %testres $testres] ${::run.after}]
     set script [string trim $script]
     puts "Executing $script"
-    catch {exec {*}$script}
+    if {[catch {exec {*}$script} script_err]} {
+        puts "Warning, after script error: $script_err"
+    }
 }
 
 ################################################################################
